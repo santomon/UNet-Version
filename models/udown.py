@@ -15,14 +15,18 @@ from unet.models.layers import unetConv2
 
 class UnetDownward(nn.Module):
 
-    def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True):
+    def __init__(self, in_channels=3, n_classes=1, feature_scale=4, is_deconv=True, is_batchnorm=True, get_intermediate_outputs=False):
         super(UnetDownward, self).__init__()
+        filters = [64, 128, 256, 512, 1024]
+
         self.is_deconv = is_deconv
         self.in_channels = in_channels
+        self.out_channels = 1024 if not get_intermediate_outputs else sum(filters)
         self.is_batchnorm = is_batchnorm
         self.feature_scale = feature_scale
 
-        filters = [64, 128, 256, 512, 1024]
+        self.get_intermediate_outputs = get_intermediate_outputs
+
 
         ## -------------Encoder--------------
         self.conv1 = unetConv2(self.in_channels, filters[0], self.is_batchnorm)
@@ -58,10 +62,11 @@ class UnetDownward(nn.Module):
         hd5 = self.conv5(h5)  # h5->20*20*1024
 
         result = OrderedDict()
-        result['h1'] = h1
-        result['h2'] = h2
-        result['h3'] = h3
-        result['h4'] = h4
+        if self.get_intermediate_outputs:
+            result['h1'] = h1
+            result['h2'] = h2
+            result['h3'] = h3
+            result['h4'] = h4
         result['hd5'] = hd5
 
         return result
